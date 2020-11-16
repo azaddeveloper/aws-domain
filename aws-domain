@@ -1,0 +1,65 @@
+public function createSubdomain(){
+		//To build connection
+		try {
+		    $client = Route53Client::factory(array(
+		        'version' => 'latest',
+				'region' => 'us-west-2',
+				'credentials' => [
+					'key' => $this->config->item("s3_key"),
+					'secret' => $this->config->item("s3_Secret"),
+				],
+		    ));
+		} catch (Exception $e) {
+		        echo $e->getMessage();
+		}
+
+		try {
+
+		    $dns = 'connect.pressurepro.us';
+		    $HostedZoneId = 'Z3U31ZLFSCY5JJ'; // eg. A4Z9SD7DRE84I ( like 13 digit )
+		    $name = 'mynew.staging.connect.pressurepro.us'; //eg. subdomain name you want to create 
+		    $ip = '44.226.219.188'; // aws domain Server ip address
+		    $ttl = 600;
+		    $recordType = 'A';
+		    $ResourceRecordsValue = array('Value' => $ip);
+
+		    $result = $client->changeResourceRecordSets(array(
+			    // HostedZoneId is required
+			    'HostedZoneId' => 'Z3U31ZLFSCY5JJ',
+			    // ChangeBatch is required
+			    'ChangeBatch' => array( 
+			        'Comment' => 'string',
+			        // Changes is required
+			        'Changes' => array(
+			            array(
+			                // Action is required
+			                'Action' => 'CREATE',
+			                // ResourceRecordSet is required
+			                'ResourceRecordSet' => array(
+			                    // Name is required
+			                    'Name' => $name,
+			                    // Type is required
+			                    'Type' => $recordType,
+			                    // 'TTL' => $ttl, 
+			                    'AliasTarget' => [ 
+			                        'DNSName' => 'Pressureprostaging-env.eba-upyr3uvq.us-west-2.elasticbeanstalk.com', // REQUIRED
+			                        'EvaluateTargetHealth' => false, // REQUIRED
+			                        'HostedZoneId' => 'Z38NKT9BP95V3O', // REQUIRED
+			                    ],
+			                    // 'ResourceRecords' => array(
+			                    //     array(
+			                    //         // Value is required
+			                    //         // 'Value' =>  $ip,
+			                    //     ),
+			                    // ),
+			                ),
+			            ),
+			        ),
+			    ),
+			));
+		} catch (Exception $e) {
+		        echo $e->getMessage();
+		}
+		echo "<pre>";
+		print_r($result);
+	}
